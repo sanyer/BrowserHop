@@ -36,9 +36,14 @@ final class BrowserManager: ObservableObject {
     private static let hiddenKey = "HiddenBrowsers"
 
     init() {
-        // Load persisted hidden set
-        let hidden = UserDefaults.standard.stringArray(forKey: Self.hiddenKey) ?? []
-        hiddenBrowserIDs = Set(hidden)
+        // Load persisted hidden set (hide BrowserHop itself by default)
+        if let hidden = UserDefaults.standard.stringArray(forKey: Self.hiddenKey) {
+            hiddenBrowserIDs = Set(hidden)
+        } else {
+            let ownBundleID = Bundle.main.bundleIdentifier ?? "ZhuzhaTech.BrowserHop"
+            hiddenBrowserIDs = Set([ownBundleID])
+            UserDefaults.standard.set(Array(hiddenBrowserIDs), forKey: Self.hiddenKey)
+        }
 
         Task {
             await self.loadBrowsers()
@@ -59,8 +64,10 @@ final class BrowserManager: ObservableObject {
             for appURL in appURLs {
                 guard let bundle = Bundle(url: appURL),
                       let bundleID = bundle.bundleIdentifier,
-                      !found.contains(bundleID),
-                      let name = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String else { continue }
+                      !found.contains(bundleID) else { continue }
+                let name = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+                    ?? bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+                    ?? appURL.deletingPathExtension().lastPathComponent
                 found.insert(bundleID)
                 let icon = workspace.icon(forFile: appURL.path)
                 icon.size = NSSize(width: 64, height: 64)
@@ -155,6 +162,25 @@ final class BrowserManager: ObservableObject {
         UserDefaults.standard.set(Array(hiddenBrowserIDs), forKey: Self.hiddenKey)
     }
 
+    // MARK: - Open URL
+
+    func openURL(_ url: URL, inBrowserWithID bundleID: String) {
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = true
+        let appURL = browsers.first(where: { $0.id == bundleID })?.bundleURL
+            ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
+        guard let appURL else {
+            // Last resort: open with the system default
+            openURLInDefaultBrowser(url)
+            return
+        }
+        NSWorkspace.shared.open([url], withApplicationAt: appURL, configuration: config)
+    }
+
+    func openURLInDefaultBrowser(_ url: URL) {
+        NSWorkspace.shared.open(url)
+    }
+
     // MARK: - File discovery
 
     private nonisolated static func discoverAppURLs(in searchDirs: [URL]) -> [URL] {
@@ -177,3 +203,18 @@ final class BrowserManager: ObservableObject {
     }
 }
 
+// MARK: - NSImage resizing
+
+extension NSImage {
+    func resized(to size: CGFloat) -> NSImage {
+        let newSize = NSSize(width: size, height: size)
+        let img = NSImage(size: newSize)
+        img.lockFocus()
+        self.draw(in: NSRect(origin: .zero, size: newSize),
+                  from: NSRect(origin: .zero, size: self.size),
+                  operation: .copy,
+                  fraction: 1.0)
+        img.unlockFocus()
+        return img
+    }
+}

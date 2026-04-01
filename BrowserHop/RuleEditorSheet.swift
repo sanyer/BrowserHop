@@ -6,6 +6,7 @@ struct RuleEditorSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var browserManager: BrowserManager
+    @Query(sort: \RuleModel.order) private var allRules: [RuleModel]
 
     private enum ActionKind: Hashable {
         case showPicker
@@ -72,7 +73,7 @@ struct RuleEditorSheet: View {
                     .keyboardShortcut(.cancelAction)
                 Button("Save") { saveRule() }
                     .keyboardShortcut(.defaultAction)
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(!canSave)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -193,7 +194,7 @@ struct RuleEditorSheet: View {
                 Text("Select a browser...").tag("")
                 ForEach(browserManager.browsers) { browser in
                     HStack(spacing: 6) {
-                        Image(nsImage: Self.resizedIcon(browser.icon, size: 16))
+                        Image(nsImage: browser.icon.resized(to: 16))
                         Text(browser.displayName)
                     }
                     .tag(browser.id)
@@ -203,15 +204,16 @@ struct RuleEditorSheet: View {
         }
     }
 
-    private static func resizedIcon(_ icon: NSImage, size: CGFloat) -> NSImage {
-        let img = NSImage(size: NSSize(width: size, height: size))
-        img.lockFocus()
-        icon.draw(in: NSRect(x: 0, y: 0, width: size, height: size))
-        img.unlockFocus()
-        return img
+
+    // MARK: - Validation
+
+    private var canSave: Bool {
+        guard !name.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        if actionKind == .openInApp && selectedBrowserID.isEmpty { return false }
+        return true
     }
 
-    // MARK: - Save with validation
+    // MARK: - Save
 
     private func saveRule() {
         let validCriteria = sanitizedCriteria()
@@ -239,9 +241,10 @@ struct RuleEditorSheet: View {
                 logic: conditionLogic,
                 criteria: validCriteria.map { $0.toModel() }
             )
+            let nextOrder = (allRules.map(\.order).max() ?? -1) + 1
             let newRule = RuleModel(
                 name: name.trimmingCharacters(in: .whitespaces),
-                order: 0,
+                order: nextOrder,
                 action: finalAction,
                 rootSet: conditionSet
             )

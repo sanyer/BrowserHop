@@ -209,7 +209,7 @@ struct RuleCardView: View {
 
             if let bundleID = info.browserBundleID,
                let browser = browserManager.browsers.first(where: { $0.id == bundleID }) {
-                Image(nsImage: Self.resizedIcon(browser.icon, size: 14))
+                Image(nsImage: browser.icon.resized(to: 14))
                 Text("Open in \(browser.displayName)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -225,13 +225,6 @@ struct RuleCardView: View {
         }
     }
 
-    private static func resizedIcon(_ icon: NSImage, size: CGFloat) -> NSImage {
-        let img = NSImage(size: NSSize(width: size, height: size))
-        img.lockFocus()
-        icon.draw(in: NSRect(x: 0, y: 0, width: size, height: size))
-        img.unlockFocus()
-        return img
-    }
 }
 
 // MARK: - Browsers Tab

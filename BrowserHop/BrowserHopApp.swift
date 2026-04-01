@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct BrowserHopApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             RuleModel.self,
@@ -25,9 +27,14 @@ struct BrowserHopApp: App {
         }
     }()
 
-    @StateObject private var browserManager = BrowserManager()
+    private let browserManager = BrowserManager()
 
     @Environment(\.openWindow) private var openWindow
+
+    init() {
+        appDelegate.browserManager = browserManager
+        appDelegate.modelContainer = sharedModelContainer
+    }
 
     var body: some Scene {
         Window("BrowserHop", id: "settings") {

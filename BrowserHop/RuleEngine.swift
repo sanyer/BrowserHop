@@ -10,7 +10,7 @@ actor RuleEngine {
     }
     
     func evaluate(url: URL, sourceApp: String?) async -> RuleAction? {
-        for rule in rules where rule.isEnabled {
+        for rule in rules {
             if await Self.evaluate(set: rule.rootSet, url: url, sourceApp: sourceApp) {
                 return rule.action
             }
@@ -27,6 +27,11 @@ actor RuleEngine {
             return await group.reduce(into: [Bool]()) { $0.append($1) }
         }
         let results = criteriaResults + subgroupResults
+        // Empty condition sets match everything for `.all` (vacuous truth),
+        // but should NOT match for `.any` or `.none` (no evidence to match).
+        if results.isEmpty {
+            return set.logic == .all
+        }
         switch set.logic {
         case .all: return results.allSatisfy { $0 }
         case .any: return results.contains(true)
@@ -50,9 +55,9 @@ actor RuleEngine {
     private static func match(value: String, pattern: String, op: Criteria.Operator) -> Bool {
         switch op {
         case .equals:
-            return value == pattern
+            return value.caseInsensitiveCompare(pattern) == .orderedSame
         case .notEquals:
-            return value != pattern
+            return value.caseInsensitiveCompare(pattern) != .orderedSame
         case .contains:
             return value.localizedCaseInsensitiveContains(pattern)
         case .notContains:
