@@ -12,7 +12,9 @@ import SwiftData
 struct BrowserHopApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            RuleModel.self,
+            ConditionSet.self,
+            Criteria.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -23,10 +25,38 @@ struct BrowserHopApp: App {
         }
     }()
 
+    @StateObject private var browserManager = BrowserManager()
+
+    @Environment(\.openWindow) private var openWindow
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        Window("BrowserHop", id: "settings") {
+            SettingsView()
+                .environmentObject(browserManager)
+                .onAppear {
+                    NSApp.activate(ignoringOtherApps: true)
+                }
         }
+        .defaultLaunchBehavior(.presented)
+        .windowResizability(.contentSize)
         .modelContainer(sharedModelContainer)
+
+        MenuBarExtra("BrowserHop", image: "MenuBarIcon") {
+            Button("Settings...") {
+                openWindow(id: "settings")
+                NSApp.activate(ignoringOtherApps: true)
+                DispatchQueue.main.async {
+                    NSApp.windows.first(where: { $0.canBecomeKey })?.orderFrontRegardless()
+                }
+            }
+            .keyboardShortcut(",", modifiers: .command)
+
+            Divider()
+
+            Button("Quit BrowserHop") {
+                NSApplication.shared.terminate(nil)
+            }
+            .keyboardShortcut("q")
+        }
     }
 }
