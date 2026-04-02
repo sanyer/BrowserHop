@@ -171,6 +171,7 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2640;
 				LastUpgradeCheck = 2640;
+				ORGANIZATIONNAME = ZhuzhaTech;
 				TargetAttributes = {
 					BBC8EE642F7D2D6D00B4584D = {
 						CreatedOnToolsVersion = 26.4;
