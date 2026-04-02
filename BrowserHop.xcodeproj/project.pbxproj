@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 100;
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
@@ -63,24 +63,18 @@
 /* Begin PBXFrameworksBuildPhase section */
 		BBC8EE622F7D2D6D00B4584D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BBC8EE712F7D2D6E00B4584D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BBC8EE7B2F7D2D6E00B4584D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -118,14 +112,10 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			fileSystemSynchronizedGroups = (
 				BBC8EE672F7D2D6D00B4584D /* BrowserHop */,
 			);
 			name = BrowserHop;
-			packageProductDependencies = (
-			);
 			productName = BrowserHop;
 			productReference = BBC8EE652F7D2D6D00B4584D /* BrowserHop.app */;
 			productType = "com.apple.product-type.application";
@@ -147,8 +137,6 @@
 				BBC8EE772F7D2D6E00B4584D /* BrowserHopTests */,
 			);
 			name = BrowserHopTests;
-			packageProductDependencies = (
-			);
 			productName = BrowserHopTests;
 			productReference = BBC8EE742F7D2D6E00B4584D /* BrowserHopTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -170,8 +158,6 @@
 				BBC8EE812F7D2D6E00B4584D /* BrowserHopUITests */,
 			);
 			name = BrowserHopUITests;
-			packageProductDependencies = (
-			);
 			productName = BrowserHopUITests;
 			productReference = BBC8EE7E2F7D2D6E00B4584D /* BrowserHopUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -208,7 +194,7 @@
 			);
 			mainGroup = BBC8EE5C2F7D2D6D00B4584D;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 100;
 			productRefGroup = BBC8EE662F7D2D6D00B4584D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -223,48 +209,36 @@
 /* Begin PBXResourcesBuildPhase section */
 		BBC8EE632F7D2D6D00B4584D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BBC8EE722F7D2D6E00B4584D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BBC8EE7C2F7D2D6E00B4584D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BBC8EE612F7D2D6D00B4584D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BBC8EE702F7D2D6E00B4584D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BBC8EE7A2F7D2D6E00B4584D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -282,7 +256,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		BBC8EE862F7D2D6E00B4584D /* Debug */ = {
+		BBC8EE862F7D2D6E00B4584D /* Debug configuration for PBXProject "BrowserHop" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -345,7 +319,7 @@
 			};
 			name = Debug;
 		};
-		BBC8EE872F7D2D6E00B4584D /* Release */ = {
+		BBC8EE872F7D2D6E00B4584D /* Release configuration for PBXProject "BrowserHop" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -400,7 +374,7 @@
 			};
 			name = Release;
 		};
-		BBC8EE892F7D2D6E00B4584D /* Debug */ = {
+		BBC8EE892F7D2D6E00B4584D /* Debug configuration for PBXNativeTarget "BrowserHop" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -424,7 +398,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = ZhuzhaTech.BrowserHop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -443,7 +417,7 @@
 			};
 			name = Debug;
 		};
-		BBC8EE8A2F7D2D6E00B4584D /* Release */ = {
+		BBC8EE8A2F7D2D6E00B4584D /* Release configuration for PBXNativeTarget "BrowserHop" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -467,7 +441,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = ZhuzhaTech.BrowserHop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -486,7 +460,7 @@
 			};
 			name = Release;
 		};
-		BBC8EE8C2F7D2D6E00B4584D /* Debug */ = {
+		BBC8EE8C2F7D2D6E00B4584D /* Debug configuration for PBXNativeTarget "BrowserHopTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -506,7 +480,7 @@
 			};
 			name = Debug;
 		};
-		BBC8EE8D2F7D2D6E00B4584D /* Release */ = {
+		BBC8EE8D2F7D2D6E00B4584D /* Release configuration for PBXNativeTarget "BrowserHopTests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -526,7 +500,7 @@
 			};
 			name = Release;
 		};
-		BBC8EE8F2F7D2D6E00B4584D /* Debug */ = {
+		BBC8EE8F2F7D2D6E00B4584D /* Debug configuration for PBXNativeTarget "BrowserHopUITests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -544,7 +518,7 @@
 			};
 			name = Debug;
 		};
-		BBC8EE902F7D2D6E00B4584D /* Release */ = {
+		BBC8EE902F7D2D6E00B4584D /* Release configuration for PBXNativeTarget "BrowserHopUITests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -568,37 +542,33 @@
 		BBC8EE602F7D2D6D00B4584D /* Build configuration list for PBXProject "BrowserHop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BBC8EE862F7D2D6E00B4584D /* Debug */,
-				BBC8EE872F7D2D6E00B4584D /* Release */,
+				BBC8EE862F7D2D6E00B4584D /* Debug configuration for PBXProject "BrowserHop" */,
+				BBC8EE872F7D2D6E00B4584D /* Release configuration for PBXProject "BrowserHop" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		BBC8EE882F7D2D6E00B4584D /* Build configuration list for PBXNativeTarget "BrowserHop" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BBC8EE892F7D2D6E00B4584D /* Debug */,
-				BBC8EE8A2F7D2D6E00B4584D /* Release */,
+				BBC8EE892F7D2D6E00B4584D /* Debug configuration for PBXNativeTarget "BrowserHop" */,
+				BBC8EE8A2F7D2D6E00B4584D /* Release configuration for PBXNativeTarget "BrowserHop" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		BBC8EE8B2F7D2D6E00B4584D /* Build configuration list for PBXNativeTarget "BrowserHopTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BBC8EE8C2F7D2D6E00B4584D /* Debug */,
-				BBC8EE8D2F7D2D6E00B4584D /* Release */,
+				BBC8EE8C2F7D2D6E00B4584D /* Debug configuration for PBXNativeTarget "BrowserHopTests" */,
+				BBC8EE8D2F7D2D6E00B4584D /* Release configuration for PBXNativeTarget "BrowserHopTests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		BBC8EE8E2F7D2D6E00B4584D /* Build configuration list for PBXNativeTarget "BrowserHopUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BBC8EE8F2F7D2D6E00B4584D /* Debug */,
-				BBC8EE902F7D2D6E00B4584D /* Release */,
+				BBC8EE8F2F7D2D6E00B4584D /* Debug configuration for PBXNativeTarget "BrowserHopUITests" */,
+				BBC8EE902F7D2D6E00B4584D /* Release configuration for PBXNativeTarget "BrowserHopUITests" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */

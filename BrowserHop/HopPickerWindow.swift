@@ -14,33 +14,16 @@ struct HopPickerWindow: View {
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            // URL display with copy button
-            HStack(spacing: 6) {
-                Image(systemName: "link")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
-                Text(url.absoluteString)
+            // URL domain display with lock indicator
+            HStack(spacing: 4) {
+                Image(systemName: url.scheme == "https" ? "lock.fill" : "lock.open.fill")
+                    .font(.caption2)
+                    .foregroundStyle(url.scheme == "https" ? Color.secondary : Color.orange)
+                Text(url.host ?? url.absoluteString)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .truncationMode(.middle)
-                Button(action: {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(url.absoluteString, forType: .string)
-                }) {
-                    Image(systemName: "doc.on.doc")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.borderless)
-                .help("Copy URL")
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.secondary.opacity(0.08))
-            )
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 16) {
                 ForEach(Array(browsers.enumerated()), id: \.element.id) { index, browser in

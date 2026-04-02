@@ -25,7 +25,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
               let url = URL(string: urlString) else { return }
 
-        let sourceBundle = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+        // Get the sending app's bundle ID from the Apple Event sender PID
+        // (frontmostApplication would return BrowserHop itself at this point)
+        let senderPID = event.attributeDescriptor(forKeyword: AEKeyword(keySenderPIDAttr))?.int32Value ?? 0
+        let sourceBundle = NSRunningApplication(processIdentifier: senderPID)?.bundleIdentifier
 
         Task { @MainActor in
             await loadRulesIntoEngine()
@@ -78,9 +81,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingView = NSHostingView(rootView: picker)
         hostingView.setFrameSize(hostingView.fittingSize)
 
+        let contentSize = hostingView.fittingSize
         let window = NSWindow(
-            contentRect: NSRect(origin: .zero, size: hostingView.fittingSize),
-            styleMask: [.titled, .closable, .fullSizeContentView],
+            contentRect: NSRect(origin: .zero, size: contentSize),
+            styleMask: [.borderless, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -88,11 +92,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true
         window.contentView = hostingView
-        window.center()
         window.level = .floating
         window.isReleasedWhenClosed = false
-        window.makeKeyAndOrderFront(nil)
 
+        // Center on the screen where the mouse cursor is
+        let mouseLocation = NSEvent.mouseLocation
+        if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) ?? NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            let x = screenFrame.midX - contentSize.width / 2
+            let y = screenFrame.midY - contentSize.height / 2
+            window.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         pickerWindow = window
     }
