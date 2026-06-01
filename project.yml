@@ -1,0 +1,97 @@
+name: BrowserHop
+options:
+  bundleIdPrefix: ZhuzhaTech
+  deploymentTarget:
+    macOS: "26.3"
+  organizationName: ZhuzhaTech
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: X6URN8G7V8
+
+targets:
+  BrowserHop:
+    type: application
+    platform: macOS
+    sources:
+      - path: BrowserHop
+        excludes:
+          - "Info.plist"
+          - "*.entitlements"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ZhuzhaTech.BrowserHop
+        INFOPLIST_FILE: BrowserHop/Info.plist
+        CODE_SIGN_ENTITLEMENTS: BrowserHop/BrowserHop.entitlements
+        MARKETING_VERSION: "1.0.2"
+        CURRENT_PROJECT_VERSION: "1"
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_PREVIEWS: YES
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        REGISTER_APP_GROUPS: YES
+        APP_CATEGORY: public.app-category.productivity
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
+      configs:
+        Debug:
+          ENABLE_TESTABILITY: YES
+          ONLY_ACTIVE_ARCH: YES
+          GCC_OPTIMIZATION_LEVEL: "0"
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        Release:
+          COPY_PHASE_STRIP: NO
+          SWIFT_COMPILATION_MODE: wholemodule
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+
+  BrowserHopTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: BrowserHopTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ZhuzhaTech.BrowserHopTests
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: BrowserHop
+
+  BrowserHopUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: BrowserHopUITests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ZhuzhaTech.BrowserHopUITests
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: BrowserHop
+    dependencies:
+      - target: BrowserHop
+
+schemes:
+  BrowserHop:
+    build:
+      targets:
+        BrowserHop: all
+        BrowserHopTests: [test]
+        BrowserHopUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - BrowserHopTests
+        - BrowserHopUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

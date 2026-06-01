@@ -10,6 +10,28 @@ BrowserHop is a lightweight macOS utility that intercepts HTTP/HTTPS links and r
 - **Hop Picker:** Provides a beautiful, fast, borderless selection UI if no single browser is specified.
 - **Privacy-First:** 100% local, no analytics. Strict Swift 6.3 concurrency.
 
+## Development
+
+This project uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the Xcode project from `project.yml`. The `.xcodeproj` file is not committed to source control.
+
+### Prerequisites
+
+Install XcodeGen via Homebrew:
+
+```sh
+brew install xcodegen
+```
+
+### Getting Started
+
+```sh
+make generate   # generate BrowserHop.xcodeproj from project.yml
+make open       # generate and open in Xcode
+make clean      # delete the generated .xcodeproj
+```
+
+When adding or removing source files, just drop them in the appropriate folder — XcodeGen picks them up automatically on the next `make generate`. Only edit `project.yml` when changing build settings, targets, capabilities, or dependencies.
+
 ## Setting Up BrowserHop as Default Browser
 
 In order for BrowserHop to intercept links clicked in other apps (like Mail, Messages, Slack), you must set it as the system's default web browser.
