@@ -5,7 +5,7 @@ set -euo pipefail
 # Builds, signs, creates DMG, notarizes, staples, and optionally publishes to GitHub.
 #
 # Prerequisites:
-#   brew install xcodegen git-cliff
+#   brew install xcodegen git-cliff create-dmg
 #   gh auth login
 #   xcrun notarytool store-credentials "BrowserHop" \
 #     --apple-id YOUR_APPLE_ID \
@@ -120,6 +120,7 @@ require_command hdiutil
 require_command xcrun
 require_command gh
 require_command git-cliff
+require_command create-dmg
 
 # Verify signing identity exists
 security find-identity -v -p codesigning | grep -q "$SIGNING_IDENTITY" \
@@ -172,19 +173,24 @@ ok "Signed and verified"
 
 DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 DMG_PATH="$OUTPUT_DIR/$DMG_NAME"
+DMG_BACKGROUND="$ROOT_DIR/scripts/dmg-assets/background.png"
 
 info "Creating DMG"
-STAGE_DIR="$(mktemp -d)"
-ditto "$APP_PATH" "$STAGE_DIR/$APP_NAME.app"
-ln -s /Applications "$STAGE_DIR/Applications"
-hdiutil create \
-    -volname "$APP_NAME" \
-    -srcfolder "$STAGE_DIR" \
-    -ov -format UDZO \
-    "$DMG_PATH" >/dev/null
-rm -rf "$STAGE_DIR"
+rm -f "$DMG_PATH"
+create-dmg \
+    --volname "$APP_NAME" \
+    --background "$DMG_BACKGROUND" \
+    --window-pos 200 120 \
+    --window-size 600 400 \
+    --icon-size 80 \
+    --icon "$APP_NAME.app" 150 165 \
+    --app-drop-link 450 165 \
+    --hide-extension "$APP_NAME.app" \
+    --no-internet-enable \
+    "$DMG_PATH" \
+    "$APP_PATH"
 
-# Sign the DMG too
+# Sign the DMG
 codesign --force --sign "$SIGNING_IDENTITY" "$DMG_PATH"
 ok "DMG created: $DMG_PATH"
 
