@@ -7,6 +7,9 @@ open: generate
 	open BrowserHop.xcodeproj
 
 build: generate
+	xcodebuild -scheme BrowserHop -configuration Release -destination "generic/platform=macOS" build -quiet
+
+build-ci: generate
 	xcodebuild -scheme BrowserHop -configuration Release -destination "generic/platform=macOS" CODE_SIGNING_ALLOWED=NO build -quiet
 
 test: generate

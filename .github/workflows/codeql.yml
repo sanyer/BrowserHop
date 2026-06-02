@@ -41,7 +41,7 @@ jobs:
 
       - name: Build
         if: matrix.build-mode == 'manual'
-        run: make build
+        run: make build-ci
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
