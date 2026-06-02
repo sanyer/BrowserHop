@@ -9,62 +9,32 @@ struct HopPickerWindow: View {
     @State private var hoveredBrowserID: String? = nil
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Open link in...")
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            // URL domain display with lock indicator
-            HStack(spacing: 4) {
-                Image(systemName: url.scheme == "https" ? "lock.fill" : "lock.open.fill")
-                    .font(.caption2)
-                    .foregroundStyle(url.scheme == "https" ? Color.secondary : Color.orange)
-                Text(url.host ?? url.absoluteString)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 16) {
+        VStack(spacing: 0) {
+            // Browser row
+            HStack(spacing: 12) {
                 ForEach(Array(browsers.enumerated()), id: \.element.id) { index, browser in
                     Button(action: {
                         onSelect(browser.id)
                     }) {
-                        VStack(spacing: 6) {
+                        VStack(spacing: 4) {
                             Image(nsImage: browser.icon)
                                 .resizable()
-                                .frame(width: 48, height: 48)
+                                .frame(width: 40, height: 40)
                             Text(browser.displayName)
-                                .font(.caption)
+                                .font(.caption2)
                                 .lineLimit(1)
-                            if index < 9 {
-                                Text("\(index + 1)")
-                                    .font(.caption2)
-                                    .fontWeight(.medium)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color.secondary.opacity(0.3))
-                                    )
-                            }
+                                .foregroundStyle(hoveredBrowserID == browser.id ? .primary : .secondary)
                         }
-                        .padding(10)
-                        .frame(width: 100, height: 100)
+                        .frame(width: 64)
+                        .padding(.vertical, 8)
                         .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .fill(hoveredBrowserID == browser.id
                                     ? Color.accentColor.opacity(0.15)
-                                    : Color.secondary.opacity(0.1))
+                                    : Color.clear)
                         )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(hoveredBrowserID == browser.id
-                                    ? Color.accentColor.opacity(0.5)
-                                    : Color.clear, lineWidth: 1.5)
-                        )
-                        .scaleEffect(hoveredBrowserID == browser.id ? 1.03 : 1.0)
-                        .animation(.easeInOut(duration: 0.15), value: hoveredBrowserID)
+                        .scaleEffect(hoveredBrowserID == browser.id ? 1.05 : 1.0)
+                        .animation(.easeInOut(duration: 0.12), value: hoveredBrowserID)
                     }
                     .buttonStyle(.plain)
                     .onHover { isHovered in
@@ -73,9 +43,28 @@ struct HopPickerWindow: View {
                     .modifier(OptionalKeyboardShortcut(index: index))
                 }
             }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
+
+            Divider()
+                .padding(.horizontal, 12)
+
+            // Domain display
+            HStack(spacing: 4) {
+                Image(systemName: url.scheme == "https" ? "lock.fill" : "lock.open.fill")
+                    .font(.caption2)
+                    .foregroundStyle(url.scheme == "https" ? Color.secondary : Color.orange)
+                Text(url.host ?? url.absoluteString)
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .padding(.vertical, 8)
         }
-        .padding(30)
         .background(VisualEffectView().ignoresSafeArea())
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 

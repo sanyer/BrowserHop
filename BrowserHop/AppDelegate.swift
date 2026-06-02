@@ -5,6 +5,7 @@ import SwiftData
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let ruleEngine = RuleEngine()
     private var pickerWindow: NSWindow?
+    private var clickOutsideMonitor: Any?
 
     /// Set by BrowserHopApp on launch so the delegate can access shared state.
     var browserManager: BrowserManager!
@@ -88,28 +89,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
-        window.isMovableByWindowBackground = true
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
         window.contentView = hostingView
         window.level = .floating
         window.isReleasedWhenClosed = false
 
-        // Center on the screen where the mouse cursor is
+        // Position near the mouse cursor, clamped to screen bounds
         let mouseLocation = NSEvent.mouseLocation
-        if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) ?? NSScreen.main {
+        let screen = NSScreen.screens.first(where: { $0.frame.contains(mouseLocation) }) ?? NSScreen.main
+        if let screen {
             let screenFrame = screen.visibleFrame
-            let x = screenFrame.midX - contentSize.width / 2
-            let y = screenFrame.midY - contentSize.height / 2
+            // Place centered horizontally on cursor, slightly above cursor
+            var x = mouseLocation.x - contentSize.width / 2
+            var y = mouseLocation.y + 10
+            // Clamp to screen edges
+            x = max(screenFrame.minX + 4, min(x, screenFrame.maxX - contentSize.width - 4))
+            y = max(screenFrame.minY + 4, min(y, screenFrame.maxY - contentSize.height - 4))
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         pickerWindow = window
+
+        // Dismiss when user clicks outside the picker
+        clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.dismissPicker()
+        }
     }
 
     private func dismissPicker() {
+        if let monitor = clickOutsideMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickOutsideMonitor = nil
+        }
         pickerWindow?.close()
         pickerWindow = nil
     }
