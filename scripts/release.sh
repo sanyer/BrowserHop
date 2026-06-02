@@ -17,6 +17,11 @@ set -euo pipefail
 #   ./scripts/release.sh major --publish   # bump 1.0.2 → 2.0.0, build + publish
 #   ./scripts/release.sh 1.2.0 --publish   # set exact version, build + publish
 #   ./scripts/release.sh --publish         # use current version, build + publish
+#
+# Flags:
+#   --skip-build      reuse last build (skip xcodebuild)
+#   --skip-notarize   skip notarization + stapling
+#   --force           allow release from dirty working tree
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 APP_NAME="BrowserHop"
@@ -64,10 +69,16 @@ bump_version() {
 # --- Args ---
 
 PUBLISH=false
+SKIP_BUILD=false
+SKIP_NOTARIZE=false
+FORCE=false
 VERSION_ARG=""
 for arg in "$@"; do
     case "$arg" in
         --publish) PUBLISH=true ;;
+        --skip-build) SKIP_BUILD=true ;;
+        --skip-notarize) SKIP_NOTARIZE=true ;;
+        --force) FORCE=true ;;
         *) VERSION_ARG="$arg" ;;
     esac
 done
@@ -115,29 +126,34 @@ security find-identity -v -p codesigning | grep -q "$SIGNING_IDENTITY" \
     || fail "Signing identity not found: $SIGNING_IDENTITY"
 
 # Verify working tree is clean (after version bump commit)
-if [[ -n "$(git status --porcelain)" ]]; then
-    fail "Working tree not clean. Commit or stash changes before releasing."
+if [[ "$FORCE" == false && -n "$(git status --porcelain)" ]]; then
+    fail "Working tree not clean. Commit or stash changes, or use --force."
 fi
 
 # --- Clean & Build ---
 
-rm -rf "$DERIVED_DATA" "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-info "Generating Xcode project"
-(cd "$ROOT_DIR" && xcodegen generate >/dev/null)
+if [[ "$SKIP_BUILD" == false ]]; then
+    rm -rf "$DERIVED_DATA"
 
-info "Building $APP_NAME (Release)"
-xcodebuild \
-    -project "$ROOT_DIR/$APP_NAME.xcodeproj" \
-    -scheme "$SCHEME" \
-    -configuration Release \
-    -destination "generic/platform=macOS" \
-    -derivedDataPath "$DERIVED_DATA" \
-    MARKETING_VERSION="$VERSION" \
-    CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-    build \
-    -quiet
+    info "Generating Xcode project"
+    (cd "$ROOT_DIR" && xcodegen generate >/dev/null)
+
+    info "Building $APP_NAME (Release)"
+    xcodebuild \
+        -project "$ROOT_DIR/$APP_NAME.xcodeproj" \
+        -scheme "$SCHEME" \
+        -configuration Release \
+        -destination "generic/platform=macOS" \
+        -derivedDataPath "$DERIVED_DATA" \
+        MARKETING_VERSION="$VERSION" \
+        CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+        build \
+        -quiet
+else
+    info "Skipping build (--skip-build)"
+fi
 
 APP_PATH=$(find "$DERIVED_DATA" -name "$APP_NAME.app" -type d | head -1)
 [[ -d "$APP_PATH" ]] || fail "Build product not found"
@@ -174,16 +190,18 @@ ok "DMG created: $DMG_PATH"
 
 # --- Notarize ---
 
-info "Submitting for notarization (this may take a few minutes)"
-xcrun notarytool submit "$DMG_PATH" \
-    --keychain-profile "$NOTARY_PROFILE" \
-    --wait
+if [[ "$SKIP_NOTARIZE" == false ]]; then
+    info "Submitting for notarization (this may take a few minutes)"
+    xcrun notarytool submit "$DMG_PATH" \
+        --keychain-profile "$NOTARY_PROFILE" \
+        --wait
 
-# --- Staple ---
-
-info "Stapling notarization ticket"
-xcrun stapler staple "$DMG_PATH"
-ok "Notarization complete"
+    info "Stapling notarization ticket"
+    xcrun stapler staple "$DMG_PATH"
+    ok "Notarization complete"
+else
+    info "Skipping notarization (--skip-notarize)"
+fi
 
 # --- GitHub Release ---
 
