@@ -8,3 +8,6 @@ BrowserHop.xcodeproj/
 *.xcuserstate
 xcuserdata/
 DerivedData/
+
+# Build artifacts
+.build/
