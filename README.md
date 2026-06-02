@@ -1,45 +1,94 @@
-# BrowserHop
+<p align="center">
+  <img src="BrowserHop/Assets.xcassets/AppIcon.appiconset/icon_256.png" width="128" alt="BrowserHop icon" />
+</p>
 
-BrowserHop is a lightweight macOS utility that intercepts HTTP/HTTPS links and routes them based on user-defined rules. It runs as a Menu Bar app and acts as a "Router" between macOS and your installed web browsers.
+<h1 align="center">BrowserHop</h1>
 
-## Features
+<p align="center">
+  A smart default browser for macOS that routes URLs to the right browser based on your rules.
+</p>
 
-- **URL Interception:** Captures system-wide `http` and `https` links.
-- **Dynamic Discovery:** Automatically detects installed web-capable applications.
-- **SwiftData Rules:** Define complex "All/Any/None" logic to match source app, domain, or regex.
-- **Hop Picker:** Provides a beautiful, fast, borderless selection UI if no single browser is specified.
-- **Privacy-First:** 100% local, no analytics. Strict Swift 6.3 concurrency.
+---
 
-## Development
+## What It Actually Does
 
-This project uses [XcodeGen](https://github.com/yonaskolb/XcodeGen) to generate the Xcode project from `project.yml`. The `.xcodeproj` file is not committed to source control.
+When you set BrowserHop as your system default browser, every link clicked outside a browser (Mail, Slack, Messages, Terminal, etc.) flows through it. BrowserHop evaluates the URL against your rules in under 100ms, then either:
 
-### Prerequisites
+- Opens it directly in the matched browser
+- Opens it in the system default browser
+- Shows a fast, keyboard-driven picker so you choose on the spot
 
-Install XcodeGen via Homebrew:
+No analytics, no network calls, no background daemons. Pure local routing.
+
+## Link Sources
+
+BrowserHop intercepts links via macOS Apple Events (`http`/`https` URL schemes). It identifies the **source application** that opened the link by reading the sender PID from the event, allowing rules like "links from Slack → Chrome" or "links from Mail → Safari".
+
+## Installing
+
+1. Download the latest release from [Releases](https://github.com/sanyer/BrowserHop/releases)
+2. Move `BrowserHop.app` to `/Applications`
+3. Launch it — appears in the menu bar only (no Dock icon)
+4. Set as default browser: **System Settings → Desktop & Dock → Default web browser → BrowserHop**
+
+## Building
+
+Requires Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen):
 
 ```sh
 brew install xcodegen
 ```
 
-### Getting Started
-
 ```sh
-make generate   # generate BrowserHop.xcodeproj from project.yml
-make open       # generate and open in Xcode
-make clean      # delete the generated .xcodeproj
+make generate   # generate .xcodeproj from project.yml
+make open       # generate + open in Xcode
+make clean      # remove generated .xcodeproj
 ```
 
-When adding or removing source files, just drop them in the appropriate folder — XcodeGen picks them up automatically on the next `make generate`. Only edit `project.yml` when changing build settings, targets, capabilities, or dependencies.
+Or build from CLI:
 
-## Setting Up BrowserHop as Default Browser
+```sh
+xcodebuild -scheme BrowserHop -configuration Release build
+```
 
-In order for BrowserHop to intercept links clicked in other apps (like Mail, Messages, Slack), you must set it as the system's default web browser.
+Run tests:
 
-1. **Launch BrowserHop.** You will see it appear in your Menu Bar.
-2. Open **System Settings** on your Mac (Apple menu  > System Settings).
-3. Navigate to **Desktop & Dock** in the sidebar.
-4. Scroll down to the **Default web browser** dropdown menu.
-5. Select **BrowserHop** from the list.
+```sh
+xcodebuild -scheme BrowserHop -configuration Debug test
+```
 
-Now, whenever you click a link outside of a browser, BrowserHop will intercept it and evaluate it against your rules in `< 100ms`, routing it immediately or showing the Hop Picker.
+## Rules
+
+Rules are evaluated top-to-bottom. First match wins. Each rule has:
+
+- **Conditions** — one or more criteria combined with All/Any/None logic:
+  - **Source App** — the app that opened the link (bundle ID, e.g. `com.tinyspeck.slackmacgap`)
+  - **Domain** — the URL host (e.g. `github.com`)
+  - **URL Regex** — full URL pattern match
+- **Operators** — `is`, `is not`, `contains`, `doesn't contain`, `matches` (regex)
+- **Action** — what happens when conditions match:
+  - Open in a specific browser
+  - Use system default browser
+  - Show the Hop Picker
+
+Rules with no conditions match everything (useful as a catch-all at the bottom).
+
+## Settings
+
+Access via the menu bar icon → Settings. Three tabs:
+
+| Tab | Purpose |
+|-----|---------|
+| **Browsers** | Reorder detected browsers (top = primary), hide/show in picker |
+| **Rules** | Create, edit, enable/disable, delete routing rules |
+| **About** | Version info |
+
+## Permissions
+
+- **No App Sandbox** — required to open URLs in other applications and read sender app info from Apple Events
+- **Hardened Runtime** — enabled for notarization compatibility
+- **No special entitlements** — no accessibility, no network, no disk access beyond standard
+
+## License
+
+[BSD 3-Clause](LICENSE) — Copyright (c) 2026, Roman Zhuzha
