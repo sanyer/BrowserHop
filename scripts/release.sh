@@ -2,19 +2,21 @@
 set -euo pipefail
 
 # BrowserHop Release Script
-# Builds, signs, creates DMG, notarizes, and staples.
+# Builds, signs, creates DMG, notarizes, staples, and optionally publishes to GitHub.
 #
 # Prerequisites:
-#   brew install xcodegen
+#   brew install xcodegen git-cliff
 #   gh auth login
 #   xcrun notarytool store-credentials "BrowserHop" \
 #     --apple-id YOUR_APPLE_ID \
 #     --team-id X6URN8G7V8
 #
 # Usage:
-#   ./scripts/release.sh [version]        # build + notarize only
-#   ./scripts/release.sh 1.1.0            # build specific version
-#   ./scripts/release.sh 1.1.0 --publish  # build + create GitHub release
+#   ./scripts/release.sh patch             # bump 1.0.2 → 1.0.3, build + notarize
+#   ./scripts/release.sh minor --publish   # bump 1.0.2 → 1.1.0, build + publish
+#   ./scripts/release.sh major --publish   # bump 1.0.2 → 2.0.0, build + publish
+#   ./scripts/release.sh 1.2.0 --publish   # set exact version, build + publish
+#   ./scripts/release.sh --publish         # use current version, build + publish
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 APP_NAME="BrowserHop"
@@ -23,6 +25,7 @@ SIGNING_IDENTITY="Developer ID Application: Roman Zhuzha (X6URN8G7V8)"
 NOTARY_PROFILE="BrowserHop"
 DERIVED_DATA="$ROOT_DIR/.build/DerivedData"
 OUTPUT_DIR="$ROOT_DIR/.build/release"
+PROJECT_YML="$ROOT_DIR/project.yml"
 
 # --- Helpers ---
 
@@ -34,20 +37,65 @@ require_command() {
     command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"
 }
 
+# --- Semver helpers ---
+
+read_version() {
+    grep 'MARKETING_VERSION' "$PROJECT_YML" | head -1 | sed 's/.*: *"\(.*\)"/\1/'
+}
+
+write_version() {
+    local new_version="$1"
+    sed -i '' "s/MARKETING_VERSION: \".*\"/MARKETING_VERSION: \"$new_version\"/" "$PROJECT_YML"
+}
+
+bump_version() {
+    local current="$1" part="$2"
+    local major minor patch
+    IFS='.' read -r major minor patch <<< "$current"
+
+    case "$part" in
+        major) echo "$((major + 1)).0.0" ;;
+        minor) echo "${major}.$((minor + 1)).0" ;;
+        patch) echo "${major}.${minor}.$((patch + 1))" ;;
+        *) fail "Invalid bump type: $part (use major, minor, or patch)" ;;
+    esac
+}
+
 # --- Args ---
 
 PUBLISH=false
-VERSION=""
+VERSION_ARG=""
 for arg in "$@"; do
     case "$arg" in
         --publish) PUBLISH=true ;;
-        *) VERSION="$arg" ;;
+        *) VERSION_ARG="$arg" ;;
     esac
 done
 
-if [[ -z "$VERSION" ]]; then
-    VERSION=$(grep 'MARKETING_VERSION' "$ROOT_DIR/project.yml" | head -1 | sed 's/.*: *"\(.*\)"/\1/')
+# --- Resolve version ---
+
+CURRENT_VERSION=$(read_version)
+
+if [[ -z "$VERSION_ARG" ]]; then
+    VERSION="$CURRENT_VERSION"
+elif [[ "$VERSION_ARG" =~ ^(major|minor|patch)$ ]]; then
+    VERSION=$(bump_version "$CURRENT_VERSION" "$VERSION_ARG")
+    info "Bumping version: $CURRENT_VERSION → $VERSION"
+    write_version "$VERSION"
+    git add "$PROJECT_YML"
+    git commit -m "release: bump version to $VERSION"
+elif [[ "$VERSION_ARG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    VERSION="$VERSION_ARG"
+    if [[ "$VERSION" != "$CURRENT_VERSION" ]]; then
+        info "Setting version: $CURRENT_VERSION → $VERSION"
+        write_version "$VERSION"
+        git add "$PROJECT_YML"
+        git commit -m "release: bump version to $VERSION"
+    fi
+else
+    fail "Invalid version argument: $VERSION_ARG (use major/minor/patch or X.Y.Z)"
 fi
+
 BUILD_NUMBER=$(date +%Y%m%d%H%M)
 
 info "Release: $APP_NAME v$VERSION (build $BUILD_NUMBER)"
@@ -61,11 +109,15 @@ require_command hdiutil
 require_command xcrun
 require_command gh
 require_command git-cliff
-require_command git-cliff
 
 # Verify signing identity exists
 security find-identity -v -p codesigning | grep -q "$SIGNING_IDENTITY" \
     || fail "Signing identity not found: $SIGNING_IDENTITY"
+
+# Verify working tree is clean (after version bump commit)
+if [[ -n "$(git status --porcelain)" ]]; then
+    fail "Working tree not clean. Commit or stash changes before releasing."
+fi
 
 # --- Clean & Build ---
 
@@ -140,11 +192,14 @@ if [[ "$PUBLISH" == true ]]; then
 
     TAG="v$VERSION"
 
+    # Push version bump commit if needed
+    git push origin main
+
     # Tag if not already tagged
     if ! git rev-parse "$TAG" >/dev/null 2>&1; then
         git tag -a "$TAG" -m "Release $VERSION"
-        git push origin "$TAG"
     fi
+    git push origin "$TAG"
 
     # Generate release notes from commits since last tag
     NOTES=$(git-cliff --current --strip header 2>/dev/null || echo "")
