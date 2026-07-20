@@ -164,21 +164,70 @@ final class BrowserManager: ObservableObject {
 
     // MARK: - Open URL
 
-    func openURL(_ url: URL, inBrowserWithID bundleID: String) {
+    /// Where a "default browser" open should actually be routed.
+    enum FallbackTarget: Equatable {
+        case systemHandler
+        case browser(bundleID: String)
+        case safari
+    }
+
+    /// Decides how to open a URL that isn't routed to a specific browser.
+    /// Once BrowserHop is set as the system default, asking the system to
+    /// open the URL would bounce it straight back to us in an infinite loop,
+    /// so "default" must resolve to a real browser in that case.
+    static func resolveFallbackTarget(
+        systemHandlerID: String?,
+        ownBundleID: String,
+        visibleBrowserIDs: [String]
+    ) -> FallbackTarget {
+        if let handler = systemHandlerID, handler != ownBundleID {
+            return .systemHandler
+        }
+        if let primary = visibleBrowserIDs.first(where: { $0 != ownBundleID }) {
+            return .browser(bundleID: primary)
+        }
+        return .safari
+    }
+
+    /// `excluding` carries bundle IDs that already failed to open so the
+    /// fallback chain can never revisit them and recurse forever.
+    func openURL(_ url: URL, inBrowserWithID bundleID: String, excluding: Set<String> = []) {
         let config = NSWorkspace.OpenConfiguration()
         config.activates = true
         let appURL = browsers.first(where: { $0.id == bundleID })?.bundleURL
             ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
         guard let appURL else {
-            // Last resort: open with the system default
-            openURLInDefaultBrowser(url)
+            openURLInDefaultBrowser(url, excluding: excluding.union([bundleID]))
             return
         }
         NSWorkspace.shared.open([url], withApplicationAt: appURL, configuration: config)
     }
 
-    func openURLInDefaultBrowser(_ url: URL) {
-        NSWorkspace.shared.open(url)
+    func openURLInDefaultBrowser(_ url: URL, excluding: Set<String> = []) {
+        let ownID = Bundle.main.bundleIdentifier ?? "ZhuzhaTech.BrowserHop"
+        let systemHandlerID = NSWorkspace.shared.urlForApplication(toOpen: url)
+            .flatMap { Bundle(url: $0)?.bundleIdentifier }
+        let candidates = visibleBrowsers.map(\.id).filter { !excluding.contains($0) }
+
+        switch Self.resolveFallbackTarget(
+            systemHandlerID: systemHandlerID,
+            ownBundleID: ownID,
+            visibleBrowserIDs: candidates
+        ) {
+        case .systemHandler:
+            NSWorkspace.shared.open(url)
+        case .browser(let bundleID):
+            openURL(url, inBrowserWithID: bundleID, excluding: excluding)
+        case .safari:
+            guard let safariURL = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: "com.apple.Safari"
+            ) else { return }
+            NSWorkspace.shared.open(
+                [url],
+                withApplicationAt: safariURL,
+                configuration: NSWorkspace.OpenConfiguration()
+            )
+        }
     }
 
     // MARK: - File discovery

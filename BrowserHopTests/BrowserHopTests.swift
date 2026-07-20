@@ -1,19 +1,61 @@
-//
-//  BrowserHopTests.swift
-//  BrowserHopTests
-//
-//  Created by Roman Zhuzha on 1/4/26.
-//
-
 import Testing
 @testable import BrowserHop
 
-struct BrowserHopTests {
+@MainActor
+struct FallbackTargetTests {
+    private let own = "ZhuzhaTech.BrowserHop"
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
-        // Swift Testing Documentation
-        // https://developer.apple.com/documentation/testing
+    @Test func usesSystemHandlerWhenItIsAnotherBrowser() {
+        let target = BrowserManager.resolveFallbackTarget(
+            systemHandlerID: "com.apple.Safari",
+            ownBundleID: own,
+            visibleBrowserIDs: ["org.mozilla.firefox", "com.google.Chrome"]
+        )
+        #expect(target == .systemHandler)
     }
 
+    @Test func routesToPrimaryBrowserWhenBrowserHopIsTheSystemHandler() {
+        let target = BrowserManager.resolveFallbackTarget(
+            systemHandlerID: own,
+            ownBundleID: own,
+            visibleBrowserIDs: ["com.google.Chrome", "com.apple.Safari"]
+        )
+        #expect(target == .browser(bundleID: "com.google.Chrome"))
+    }
+
+    @Test func routesToPrimaryBrowserWhenHandlerCannotBeResolved() {
+        let target = BrowserManager.resolveFallbackTarget(
+            systemHandlerID: nil,
+            ownBundleID: own,
+            visibleBrowserIDs: ["com.google.Chrome"]
+        )
+        #expect(target == .browser(bundleID: "com.google.Chrome"))
+    }
+
+    @Test func neverPicksBrowserHopFromTheVisibleList() {
+        let target = BrowserManager.resolveFallbackTarget(
+            systemHandlerID: own,
+            ownBundleID: own,
+            visibleBrowserIDs: [own, "com.apple.Safari"]
+        )
+        #expect(target == .browser(bundleID: "com.apple.Safari"))
+    }
+
+    @Test func fallsBackToSafariWhenOnlyBrowserHopIsVisible() {
+        let target = BrowserManager.resolveFallbackTarget(
+            systemHandlerID: own,
+            ownBundleID: own,
+            visibleBrowserIDs: [own]
+        )
+        #expect(target == .safari)
+    }
+
+    @Test func fallsBackToSafariWhenNothingIsAvailable() {
+        let target = BrowserManager.resolveFallbackTarget(
+            systemHandlerID: nil,
+            ownBundleID: own,
+            visibleBrowserIDs: []
+        )
+        #expect(target == .safari)
+    }
 }
