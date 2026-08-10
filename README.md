@@ -15,7 +15,7 @@
 When you set BrowserHop as your system default browser, every link clicked outside a browser (Mail, Slack, Messages, Terminal, etc.) flows through it. BrowserHop evaluates the URL against your rules in under 100ms, then either:
 
 - Opens it directly in the matched browser
-- Opens it in the system default browser
+- Opens it in your primary browser (the one at the top of your browser list)
 - Shows a fast, keyboard-driven picker so you choose on the spot
 
 No analytics, no network calls, no background daemons. Pure local routing.

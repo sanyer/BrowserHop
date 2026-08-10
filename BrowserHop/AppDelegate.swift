@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let ruleEngine = RuleEngine()
     private var pickerWindow: NSWindow?
     private var clickOutsideMonitor: Any?
+    private var resignKeyObserver: NSObjectProtocol?
 
     /// Set by BrowserHopApp on launch so the delegate can access shared state.
     var browserManager: BrowserManager!
@@ -30,6 +31,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // (frontmostApplication would return BrowserHop itself at this point)
         let senderPID = event.attributeDescriptor(forKeyword: AEKeyword(keySenderPIDAttr))?.int32Value ?? 0
         let sourceBundle = NSRunningApplication(processIdentifier: senderPID)?.bundleIdentifier
+
+        // A URL we dispatched ourselves means the system handed it right back
+        // (BrowserHop is the default handler) — break the loop instead of
+        // re-evaluating rules against our own event.
+        if senderPID == ProcessInfo.processInfo.processIdentifier {
+            browserManager.openURLInDefaultBrowser(url)
+            return
+        }
 
         Task { @MainActor in
             await loadRulesIntoEngine()
@@ -83,18 +92,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hostingView.setFrameSize(hostingView.fittingSize)
 
         let contentSize = hostingView.fittingSize
-        let window = NSWindow(
+        let window = PickerPanel(
             contentRect: NSRect(origin: .zero, size: contentSize),
-            styleMask: [.borderless, .fullSizeContentView],
+            styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
+        window.onCancel = { [weak self] in self?.dismissPicker() }
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true
         window.contentView = hostingView
         window.level = .floating
         window.isReleasedWhenClosed = false
+        window.hidesOnDeactivate = false
 
         // Position near the mouse cursor, clamped to screen bounds
         let mouseLocation = NSEvent.mouseLocation
@@ -111,12 +122,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
         pickerWindow = window
 
-        // Dismiss when user clicks outside the picker
+        // Dismiss when user clicks outside the picker. The global monitor only
+        // sees other apps' events; losing key status covers clicks on our own
+        // windows and Cmd-Tab away.
         clickOutsideMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             self?.dismissPicker()
+        }
+        resignKeyObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.dismissPicker() }
         }
     }
 
@@ -124,6 +143,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let monitor = clickOutsideMonitor {
             NSEvent.removeMonitor(monitor)
             clickOutsideMonitor = nil
+        }
+        if let observer = resignKeyObserver {
+            NotificationCenter.default.removeObserver(observer)
+            resignKeyObserver = nil
         }
         pickerWindow?.close()
         pickerWindow = nil

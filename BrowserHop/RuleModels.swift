@@ -23,7 +23,7 @@ extension RuleModel {
         case .showPicker:
             return ("Show browser picker", nil)
         case .useDefault:
-            return ("Use default browser", nil)
+            return ("Use primary browser", nil)
         case .openInApp(let bundleID):
             return ("Open in browser", bundleID)
         }

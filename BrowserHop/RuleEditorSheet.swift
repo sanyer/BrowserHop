@@ -166,7 +166,7 @@ struct RuleEditorSheet: View {
             VStack(alignment: .leading, spacing: 8) {
                 Picker("When matched", selection: $actionKind) {
                     Text("Show Browser Picker").tag(ActionKind.showPicker)
-                    Text("Use Default Browser").tag(ActionKind.useDefault)
+                    Text("Use Primary Browser").tag(ActionKind.useDefault)
                     Text("Open in Specific Browser").tag(ActionKind.openInApp)
                 }
                 .labelsHidden()
